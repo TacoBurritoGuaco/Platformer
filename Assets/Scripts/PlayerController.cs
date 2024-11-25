@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    public Rigidbody2D rb; //The player's rigidbody
     public enum FacingDirection
     {
         left, right
@@ -20,12 +21,22 @@ public class PlayerController : MonoBehaviour
         // then passed in the to the MovementUpdate which should
         // manage the actual movement of the character.
         Vector2 playerInput = new Vector2();
+        //Going right 
+        if (Input.GetKey(KeyCode.D))
+        {
+            playerInput.x = 2f;
+        }
+        //Going left
+        if (Input.GetKey(KeyCode.A))
+        {
+            playerInput.x = -2f;
+        }
         MovementUpdate(playerInput);
     }
 
     private void MovementUpdate(Vector2 playerInput)
     {
-
+       rb.AddForce(playerInput); //Adds force in the form of the player input variable
     }
 
     public bool IsWalking()
