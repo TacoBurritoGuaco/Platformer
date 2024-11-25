@@ -1,8 +1,14 @@
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class PlayerController : MonoBehaviour
 {
     public Rigidbody2D rb; //The player's rigidbody
+
+    public BoxCollider2D box; //The player's box collider
+    public CompositeCollider2D tile; //The tilemap's collider (Note: used to be tilemapcollider
+    //But I realized what the player was colliding with was not the tiles specifically)
+
     public bool moving; //Whether or not the player is moving
     public enum FacingDirection
     {
@@ -57,7 +63,17 @@ public class PlayerController : MonoBehaviour
     }
     public bool IsGrounded()
     {
-        return false;
+        //If the box collider is touching the tilemap collider
+        if (box.IsTouching(tile))
+        {
+            Debug.Log("On Ground");
+            return true; //The player is grounded
+        }
+        else //Otherwise, the player is not grounded
+        {
+            Debug.Log("In Air");
+            return false;
+        }  
     }
 
     public FacingDirection GetFacingDirection()

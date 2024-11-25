@@ -1694,6 +1694,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rb: {fileID: 1433354317}
+  box: {fileID: 1433354318}
+  tile: {fileID: 1054579209}
+  moving: 0
 --- !u!4 &1433354315
 Transform:
   m_ObjectHideFlags: 0
