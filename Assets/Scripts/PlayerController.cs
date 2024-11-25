@@ -3,10 +3,12 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     public Rigidbody2D rb; //The player's rigidbody
+    public bool moving; //Whether or not the player is moving
     public enum FacingDirection
     {
         left, right
     }
+    FacingDirection dir; //facingDirection variable used to set the current direction being faced
 
     // Start is called before the first frame update
     void Start()
@@ -41,7 +43,17 @@ public class PlayerController : MonoBehaviour
 
     public bool IsWalking()
     {
-        return false;
+        //if either key is being held down (meaning the player is attempting to move)
+        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.A))
+        {
+            moving = true; //set to true
+        } else
+        {
+            //Else, set to false
+            moving = false;
+        }
+        return moving;
+        
     }
     public bool IsGrounded()
     {
@@ -50,6 +62,18 @@ public class PlayerController : MonoBehaviour
 
     public FacingDirection GetFacingDirection()
     {
-        return FacingDirection.left;
+        //If going left or has just stopped going left
+        if (Input.GetKey(KeyCode.D) || Input.GetKeyUp(KeyCode.D))
+        {
+            dir = FacingDirection.right; //Set dir to right
+        }
+        //If going left or has just stopped going left
+        if (Input.GetKey(KeyCode.A) || Input.GetKeyUp(KeyCode.A))
+        {
+            dir = FacingDirection.left; //set dir to left
+        }
+        return dir; //This way, if the player was facing a direction,
+                    //the player still faces that direction after
+                    //They have stopped moving at all.
     }
 }
