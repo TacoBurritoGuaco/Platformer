@@ -1,95 +1,166 @@
 using UnityEngine;
-using UnityEngine.Tilemaps;
+
+public enum PlayerDirection
+{
+    left, right
+}
+
+public enum PlayerState
+{
+    idle, walking, jumping, dead
+}
 
 public class PlayerController : MonoBehaviour
 {
-    public Rigidbody2D rb; //The player's rigidbody
+    [SerializeField] private Rigidbody2D body;
+    private PlayerDirection currentDirection = PlayerDirection.right;
+    public PlayerState currentState = PlayerState.idle;
+    public PlayerState previousState = PlayerState.idle;
 
-    public BoxCollider2D box; //The player's box collider
-    public CompositeCollider2D tile; //The tilemap's collider (Note: used to be tilemapcollider
-    //But I realized what the player was colliding with was not the tiles specifically)
+    [Header("Horizontal")]
+    public float maxSpeed = 5f;
+    public float accelerationTime = 0.25f;
+    public float decelerationTime = 0.15f;
 
-    public bool moving; //Whether or not the player is moving
-    public enum FacingDirection
+    [Header("Vertical")]
+    public float apexHeight = 3f;
+    public float apexTime = 0.5f;
+
+    [Header("Ground Checking")]
+    public float groundCheckOffset = 0.5f;
+    public Vector2 groundCheckSize = new(0.4f, 0.1f);
+    public LayerMask groundCheckMask;
+
+    private float accelerationRate;
+    private float decelerationRate;
+
+    private float gravity;
+    private float initialJumpSpeed;
+
+    private bool isGrounded = false;
+    public bool isDead = false;
+
+    private Vector2 velocity;
+
+    public void Start()
     {
-        left, right
+        body.gravityScale = 0;
+
+        accelerationRate = maxSpeed / accelerationTime;
+        decelerationRate = maxSpeed / decelerationTime;
+
+        gravity = -2 * apexHeight / (apexTime * apexTime);
+        initialJumpSpeed = 2 * apexHeight / apexTime;
     }
-    FacingDirection dir; //facingDirection variable used to set the current direction being faced
 
-    // Start is called before the first frame update
-    void Start()
+    public void Update()
     {
-        
-    }
+        previousState = currentState;
 
-    // Update is called once per frame
-    void Update()
-    {
-        // The input from the player needs to be determined and
-        // then passed in the to the MovementUpdate which should
-        // manage the actual movement of the character.
+        CheckForGround();
+
         Vector2 playerInput = new Vector2();
-        //Going right 
-        if (Input.GetKey(KeyCode.D))
+        playerInput.x = Input.GetAxisRaw("Horizontal");
+
+        if (isDead)
         {
-            playerInput.x = 2f;
+            currentState = PlayerState.dead;
         }
-        //Going left
-        if (Input.GetKey(KeyCode.A))
+
+        switch(currentState)
         {
-            playerInput.x = -2f;
+            case PlayerState.dead:
+                // do nothing - we ded.
+                break;
+            case PlayerState.idle:
+                if (!isGrounded) currentState = PlayerState.jumping;
+                else if (velocity.x != 0) currentState = PlayerState.walking;
+                break;
+            case PlayerState.walking:
+                if (!isGrounded) currentState = PlayerState.jumping;
+                else if (velocity.x == 0) currentState = PlayerState.idle;
+                break;
+            case PlayerState.jumping:
+                if (isGrounded)
+                {
+                    if (velocity.x != 0) currentState = PlayerState.walking;
+                    else currentState = PlayerState.idle;
+                }
+                break;
         }
+
         MovementUpdate(playerInput);
+        JumpUpdate();
+
+        if (!isGrounded)
+            velocity.y += gravity * Time.deltaTime;
+        else
+            velocity.y = 0;
+
+        body.velocity = velocity;
     }
 
     private void MovementUpdate(Vector2 playerInput)
     {
-       rb.AddForce(playerInput); //Adds force in the form of the player input variable
+        if (playerInput.x < 0)
+            currentDirection = PlayerDirection.left;
+        else if (playerInput.x > 0)
+            currentDirection = PlayerDirection.right;
+
+        if (playerInput.x != 0)
+        {
+            velocity.x += accelerationRate * playerInput.x * Time.deltaTime;
+            velocity.x = Mathf.Clamp(velocity.x, -maxSpeed, maxSpeed);
+        }
+        else
+        {
+            if (velocity.x > 0)
+            {
+                velocity.x -= decelerationRate * Time.deltaTime;
+                velocity.x = Mathf.Max(velocity.x, 0);
+            }
+            else if (velocity.x < 0)
+            {
+                velocity.x += decelerationRate * Time.deltaTime;
+                velocity.x = Mathf.Min(velocity.x, 0);
+            }
+        }
+    }
+
+    private void JumpUpdate()
+    {
+        if (isGrounded && Input.GetButton("Jump"))
+        {
+            velocity.y = initialJumpSpeed;
+            isGrounded = false;
+        }
+    }
+
+    private void CheckForGround()
+    {
+        isGrounded = Physics2D.OverlapBox(
+            transform.position + Vector3.down * groundCheckOffset,
+            groundCheckSize,
+            0,
+            groundCheckMask);
+    }
+
+    public void OnDrawGizmos()
+    {
+        Gizmos.DrawWireCube(transform.position + Vector3.down * groundCheckOffset, groundCheckSize);
     }
 
     public bool IsWalking()
     {
-        //if either key is being held down (meaning the player is attempting to move)
-        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.A))
-        {
-            moving = true; //set to true
-        } else
-        {
-            //Else, set to false
-            moving = false;
-        }
-        return moving;
-        
+        return velocity.x != 0;
     }
     public bool IsGrounded()
     {
-        //If the box collider is touching the tilemap collider
-        if (box.IsTouching(tile))
-        {
-            Debug.Log("On Ground");
-            return true; //The player is grounded
-        }
-        else //Otherwise, the player is not grounded
-        {
-            Debug.Log("In Air");
-            return false;
-        }  
+        return isGrounded;
     }
 
-    public FacingDirection GetFacingDirection()
+    public PlayerDirection GetFacingDirection()
     {
-        //If going left or has just stopped going left
-        if (Input.GetKey(KeyCode.D) || Input.GetKeyUp(KeyCode.D))
-        {
-            dir = FacingDirection.right; //Set dir to right
-        }
-        //If going left or has just stopped going left
-        if (Input.GetKey(KeyCode.A) || Input.GetKeyUp(KeyCode.A))
-        {
-            dir = FacingDirection.left; //set dir to left
-        }
-        return dir; //This way, if the player was facing a direction,
-                    //the player still faces that direction after
-                    //They have stopped moving at all.
+        return currentDirection;
     }
 }
