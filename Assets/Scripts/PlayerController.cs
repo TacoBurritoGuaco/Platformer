@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -38,7 +39,9 @@ public class PlayerController : MonoBehaviour
     private float gravity;
     private float initialJumpSpeed;
 
-    private bool isGrounded = false;
+    public Coroutine groundCheck; //The couroutine that checks for the ground
+    public float coyoteTime; //The coyote time
+    public bool isGrounded = false;
     public bool isDead = false;
 
     private Vector2 velocity;
@@ -58,7 +61,7 @@ public class PlayerController : MonoBehaviour
     {
         previousState = currentState;
 
-        CheckForGround();
+        groundCheck = StartCoroutine(CheckForGround()); //Starts the ground check coroutine
 
         Vector2 playerInput = new Vector2();
         playerInput.x = Input.GetAxisRaw("Horizontal");
@@ -137,8 +140,17 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void CheckForGround()
+    //Turning this into an IEnumerator to run it as a couroutine independant of the rest of the code
+    private IEnumerator CheckForGround()
     {
+        if (!Physics2D.OverlapBox(
+            transform.position + Vector3.down * groundCheckOffset,
+            groundCheckSize,
+            0,
+            groundCheckMask))
+        {
+            yield return new WaitForSeconds(coyoteTime);
+        }
         isGrounded = Physics2D.OverlapBox(
             transform.position + Vector3.down * groundCheckOffset,
             groundCheckSize,

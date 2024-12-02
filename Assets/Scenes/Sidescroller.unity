@@ -1742,6 +1742,8 @@ MonoBehaviour:
   groundCheckMask:
     serializedVersion: 2
     m_Bits: 8
+  coyoteTime: 0.08
+  isGrounded: 0
   isDead: 0
 --- !u!4 &1433354315
 Transform:
