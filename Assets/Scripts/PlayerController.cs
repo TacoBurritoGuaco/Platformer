@@ -201,7 +201,7 @@ public class PlayerController : MonoBehaviour
     private void dashUpdate()
     {
         hasDashed = false; //Set hasDashed to false by default
-        if (Input.GetKey(KeyCode.E) && (dashCooldown <= 0)) // PS. Must integrate this into larger button system later
+        if (Input.GetButton("Dash") && (dashCooldown <= 0)) // PS. Must integrate this into larger button system later
             //If the dash key is pressed and the dash cooldown is less than or equal to 0
         {
             hasDashed = true; //Set hasDashed to true for the next time the playerState switch runs
