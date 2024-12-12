@@ -9,7 +9,8 @@ public enum PlayerDirection
 
 public enum PlayerState
 {
-    idle, walking, jumping, dead
+    idle, walking, jumping, dead,
+    dash //An additional player state that determines when the player is dashing
 }
 
 public class PlayerController : MonoBehaviour
@@ -18,6 +19,16 @@ public class PlayerController : MonoBehaviour
     private PlayerDirection currentDirection = PlayerDirection.right;
     public PlayerState currentState = PlayerState.idle;
     public PlayerState previousState = PlayerState.idle;
+
+    //MECHANIC #1 - DASh
+    //Most of my time here should be spend familiarizing myself with the systems already stablished inside this script
+    //My first goal is to figure out how to set my dash state and variables
+
+    public bool hasDashed; //if the player has pressed the dash key
+    public float dashForce; //The force the player dashes with
+
+    public float dashCoolMax; //The maximum amount of time the player must wait until they can dash again (in seconds)
+    public float dashCooldown; //The amount of time until the player can dash again (in seconds)
 
     [Header("Horizontal")]
     public float maxSpeed = 5f;
@@ -71,24 +82,41 @@ public class PlayerController : MonoBehaviour
             currentState = PlayerState.dead;
         }
 
-        switch(currentState)
+        switch(currentState) //ok so from my understanding of this switch statement,
+                             //this is what ultimately determines the current state of the player
         {
             case PlayerState.dead:
                 // do nothing - we ded.
                 break;
             case PlayerState.idle:
                 if (!isGrounded) currentState = PlayerState.jumping;
+                else if (hasDashed) currentState = PlayerState.dash; //if the player has dashed
                 else if (velocity.x != 0) currentState = PlayerState.walking;
                 break;
             case PlayerState.walking:
                 if (!isGrounded) currentState = PlayerState.jumping;
+                else if (hasDashed) currentState = PlayerState.dash; //if the player has dashed
                 else if (velocity.x == 0) currentState = PlayerState.idle;
                 break;
             case PlayerState.jumping:
                 if (isGrounded)
                 {
                     if (velocity.x != 0) currentState = PlayerState.walking;
+                    else if (hasDashed) currentState = PlayerState.dash; //if the player has dashed
                     else currentState = PlayerState.idle;
+                }
+                break;
+            case PlayerState.dash:
+                if (isGrounded) //If the player is grounded
+                {
+                    if (velocity.x != 0) currentState = PlayerState.walking; //If they are moving,
+                    //Playerstate is = walking
+                    else currentState = PlayerState.idle;
+                    //If the player is idle
+                } else if (!isGrounded) //If the player is not grounded
+                    //default to jumping
+                {
+                    currentState = PlayerState.jumping;
                 }
                 break;
         }
@@ -100,6 +128,11 @@ public class PlayerController : MonoBehaviour
             velocity.y += gravity * Time.deltaTime;
         else
             velocity.y = 0;
+
+        dashUpdate(); //Updates the dash
+
+        dashCooldown = dashCooldown - (1 * Time.deltaTime); //Lowers the dashCooldown variable over time (seconds)
+        dashCooldown = Mathf.Clamp(dashCooldown, 0, dashCoolMax); //Clamps the dashCooldown variable
 
         body.velocity = velocity;
     }
@@ -137,6 +170,21 @@ public class PlayerController : MonoBehaviour
         {
             velocity.y = initialJumpSpeed;
             isGrounded = false;
+        }
+    }
+    //This function works similarly to jumpupdate and performs the jump
+    //whenever the key is pressed (In this case, E) the player dashes
+    private void dashUpdate()
+    {
+        hasDashed = false; //Set hasDashed to false by default
+        if (Input.GetKey(KeyCode.E) && (dashCooldown <= 0)) // PS. Must integrate this into larger button system later
+            //If the dash key is pressed and the dash cooldown is less than or equal to 0
+        {
+            hasDashed = true; //Set hasDashed to true for the next time the playerState switch runs
+            dashCooldown = dashCoolMax; //Resets the dashcooldown back to max
+            //The force of the initial dash is applied to the x velocity
+            if (currentDirection == PlayerDirection.right) velocity.x = dashForce; //Positive force
+            if (currentDirection == PlayerDirection.left) velocity.x = -dashForce; //Inverted force (To go opposite way)
         }
     }
 
