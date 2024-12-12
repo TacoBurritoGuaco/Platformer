@@ -1736,6 +1736,8 @@ MonoBehaviour:
   dashForce: 13
   dashCoolMax: 1
   dashCooldown: 0
+  firstJump: 0
+  secondJump: 0
   maxSpeed: 5
   accelerationTime: 0.25
   decelerationTime: 0.15

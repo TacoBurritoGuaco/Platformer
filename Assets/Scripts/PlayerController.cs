@@ -30,6 +30,14 @@ public class PlayerController : MonoBehaviour
     public float dashCoolMax; //The maximum amount of time the player must wait until they can dash again (in seconds)
     public float dashCooldown; //The amount of time until the player can dash again (in seconds)
 
+    //MECHANIC #2 - JUMP
+    //This will use the jump function, and as such, should potentially be a tad easier to set up
+    //Specially now that I've done the setup for the dash
+
+    public bool firstJump; //boolean that dictates if this is the first time the character has jumped
+    public bool secondJump; //boolean that dictates if the player can jump again
+    
+
     [Header("Horizontal")]
     public float maxSpeed = 5f;
     public float accelerationTime = 0.25f;
@@ -166,10 +174,26 @@ public class PlayerController : MonoBehaviour
 
     private void JumpUpdate()
     {
-        if (isGrounded && Input.GetButton("Jump"))
+        if (isGrounded && Input.GetButton("Jump")) //When the button is first pressed down
         {
             velocity.y = initialJumpSpeed;
             isGrounded = false;
+            firstJump = true; //this is the first jump
+        }
+        //if the player lets go of the jump button and this is the first jump they've made
+        if (firstJump == true && Input.GetButtonUp("Jump"))
+        {
+            secondJump = true; //the player can now make a second jump
+            firstJump = false; //This is no longer the first jump the player made
+            //The purpose of this bool is to make it so
+            //the player cannot make another jump afterwards
+        }
+        else if (!isGrounded && Input.GetButton("Jump") && secondJump) //If the player has jumped beforehand
+                                                                      //And they try to jump again
+                                                                      //If the player is NOT grounded currently
+        {
+            velocity.y = initialJumpSpeed; //Jump again
+            secondJump = false; //reset secondJump to be false
         }
     }
     //This function works similarly to jumpupdate and performs the jump
@@ -183,8 +207,8 @@ public class PlayerController : MonoBehaviour
             hasDashed = true; //Set hasDashed to true for the next time the playerState switch runs
             dashCooldown = dashCoolMax; //Resets the dashcooldown back to max
             //The force of the initial dash is applied to the x velocity
-            if (currentDirection == PlayerDirection.right) velocity.x = dashForce; //Positive force
-            if (currentDirection == PlayerDirection.left) velocity.x = -dashForce; //Inverted force (To go opposite way)
+            if (currentDirection == PlayerDirection.right) velocity.x += dashForce; //Positive force
+            if (currentDirection == PlayerDirection.left) velocity.x -= dashForce; //Inverted force (To go opposite way)
         }
     }
 
