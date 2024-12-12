@@ -208,7 +208,7 @@ public class PlayerController : MonoBehaviour
             dashCooldown = dashCoolMax; //Resets the dashcooldown back to max
             //The force of the initial dash is applied to the x velocity
             if (currentDirection == PlayerDirection.right) velocity.x += dashForce; //Positive force
-            if (currentDirection == PlayerDirection.left) velocity.x -= dashForce; //Inverted force (To go opposite way)
+            if (currentDirection == PlayerDirection.left) velocity.x += -dashForce; //Inverted force (To go opposite way)
         }
     }
 
