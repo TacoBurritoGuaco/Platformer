@@ -1912,7 +1912,7 @@ MonoBehaviour:
   currentState: 0
   previousState: 0
   hasDashed: 0
-  dashForce: 15
+  dashForce: 16
   dashCoolMax: 1
   dashCooldown: 0
   firstJump: 0
